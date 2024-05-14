@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ room_name }} - Files</title>
+        <link rel="stylesheet" href="/static/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Room: {{ room_name }}</h1>
+            <p>Password: {{ room_password }}</p>
+            <h2>Files</h2>
+            <ul class="files-list">
+                {% for file in files %}
+                <li>
+                    <a href="{{ file.file_url }}">{{ file.name }}.{{ file.extension }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </body>
+</html>
