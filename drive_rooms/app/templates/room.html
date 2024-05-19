@@ -4,7 +4,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{ room_name }} - Files</title>
-        <link rel="stylesheet" href="/static/styles.css" />
+        <link rel="stylesheet" href="/static/css/styles.css" />
     </head>
     <body>
         <div class="container">
@@ -15,9 +15,46 @@
                 {% for file in files %}
                 <li>
                     <a href="{{ file.file_url }}">{{ file.name }}.{{ file.extension }}</a>
+                    <button onclick="deleteFile('{{ file.id }}')">Delete</button>
                 </li>
                 {% endfor %}
             </ul>
+            <h3>Upload New File</h3>
+            <form id="uploadForm">
+                <input type="file" id="fileInput" name="file" />
+                <button type="submit">Upload</button>
+            </form>
         </div>
+        <script>
+            document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const fileInput = document.getElementById("fileInput");
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+
+                const response = await fetch("/rooms/{{ room_id }}/files", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    location.reload(); // Reload the page to show the new file
+                } else {
+                    alert("File upload failed");
+                }
+            });
+
+            async function deleteFile(fileId) {
+                const response = await fetch(`/files/${fileId}`, {
+                    method: "DELETE",
+                });
+
+                if (response.ok) {
+                    location.reload(); // Reload the page to remove the deleted file
+                } else {
+                    alert("File deletion failed");
+                }
+            }
+        </script>
     </body>
 </html>

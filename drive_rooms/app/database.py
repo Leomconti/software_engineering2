@@ -12,6 +12,7 @@ from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
 
+
 class DatabaseSessionManager:
     def __init__(self):
         self._engine: AsyncEngine | None = None
@@ -54,9 +55,13 @@ class DatabaseSessionManager:
         finally:
             await session.close()
 
+
+print("nesse arquivo")
 sessionmanager = DatabaseSessionManager()
+
 
 # FastApi dependency to get database session
 async def get_db():
     async with sessionmanager.session() as session:
+        print("passing here in get db")
         yield session

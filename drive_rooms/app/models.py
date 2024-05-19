@@ -24,7 +24,7 @@ class Room(database.Base):
     async def get_all(cls, db: AsyncSession):
         result = await db.execute(select(cls))
         return result.scalars().all()
-    
+
     @classmethod
     async def get(cls, db: AsyncSession, id: str):
         try:
@@ -34,15 +34,15 @@ class Room(database.Base):
         except NoResultFound:
             return None
         return transaction
-    
+
     @classmethod
     async def delete_by_id(cls, db: AsyncSession, id: str):
         transaction = await db.get(cls, id)
         if transaction is None:
             raise NoResultFound
-        db.delete(transaction)
+        await db.delete(transaction)
         await db.commit()
-    
+
     @classmethod
     async def create(cls, db: AsyncSession, name: str, password: str):
         new_room = cls(name=name, password=password)
@@ -63,10 +63,10 @@ class Files(database.Base):
 
     @classmethod
     async def get_all_by_room(cls, db: AsyncSession, room_id: str):
-        stmt = select(cls).where(cls.room_id == room_id)
+        stmt = select(cls).where(cls.room == room_id)
         result = await db.execute(stmt)
         return result.scalars().all()
-    
+
     @classmethod
     async def get_by_id(cls, db: AsyncSession, id: str):
         try:
@@ -76,8 +76,8 @@ class Files(database.Base):
         except NoResultFound:
             return None
         return transaction
-    
-    # Proabbly we can just get the class adjust and save 
+
+    # Proabbly we can just get the class adjust and save
     @classmethod
     async def update_by_id(cls, db: AsyncSession, id: str, **kwargs):
         transaction = await db.get(cls, id)
@@ -87,6 +87,3 @@ class Files(database.Base):
             setattr(transaction, key, value)
         await db.commit()
         return transaction
-    
-
-
