@@ -9,8 +9,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f4f4f9;
+    min-height: 100vh;
+    background-color: #f0f2f5;
 }
 
 .container {
@@ -18,42 +18,57 @@ body {
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 2rem;
-    max-width: 400px;
+    max-width: 600px;
     width: 100%;
-    text-align: center;
+    text-align: left;
+    margin-bottom: 60px; /* To ensure the button is visible at the bottom */
 }
 
-.form {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group {
+h1,
+h2,
+h3 {
+    color: #333;
     margin-bottom: 1rem;
 }
 
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #333333;
-    font-weight: bold;
+p {
+    color: #666;
+    margin-bottom: 1rem;
 }
 
-input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    font-size: 1rem;
+ul.files-list {
+    list-style: none;
+    padding: 0;
 }
 
-.button-group {
+ul.files-list li {
     display: flex;
+    align-items: center;
     justify-content: space-between;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+ul.files-list a {
+    color: #007bff;
+    text-decoration: none;
+    margin-right: 20px;
+}
+
+ul.files-list a:hover {
+    text-decoration: underline;
+}
+
+ul.files-list span {
+    font-style: italic;
+    color: #555;
 }
 
 button {
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1rem;
     border: none;
     border-radius: 4px;
     background-color: #4caf50;
@@ -66,109 +81,60 @@ button {
 button:hover {
     background-color: #45a049;
 }
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Arial", sans-serif;
+
+.delete-button {
+    background-color: #ff4c4c;
 }
 
-body {
+.delete-button:hover {
+    background-color: #ff1f1f;
+}
+
+.bottom-button {
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f4f4f9;
-}
-
-.container {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    max-width: 600px;
+    position: fixed;
+    bottom: 20px;
     width: 100%;
-    text-align: center;
 }
 
-h1,
-h2 {
+.bottom-button button {
+    background-color: #007bff;
+}
+
+.bottom-button button:hover {
+    background-color: #0056b3;
+}
+
+.form-group {
     margin-bottom: 1rem;
-    color: #333333;
 }
 
-p {
-    margin-bottom: 2rem;
-    color: #666666;
-}
-
-ul.files-list {
-    list-style: none;
-    padding: 0;
-}
-
-ul.files-list li {
-    margin-bottom: 0.5rem;
-}
-
-ul.files-list li a {
-    text-decoration: none;
-    color: #007bff;
-}
-
-ul.files-list li a:hover {
-    text-decoration: underline;
-}
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: "Arial", sans-serif;
-}
-
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f4f4f9;
-}
-
-.container {
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
-    max-width: 600px;
-    width: 100%;
-    text-align: center;
-}
-
-h1,
-h2 {
+input[type="file"] {
     margin-bottom: 1rem;
-    color: #333333;
 }
 
-p {
-    margin-bottom: 2rem;
-    color: #666666;
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #000;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-left: 10px;
 }
 
-ul.files-list {
-    list-style: none;
-    padding: 0;
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
-ul.files-list li {
-    margin-bottom: 0.5rem;
-}
-
-ul.files-list li a {
-    text-decoration: none;
-    color: #007bff;
-}
-
-ul.files-list li a:hover {
-    text-decoration: underline;
+.loading {
+    pointer-events: none;
+    opacity: 0.6;
 }

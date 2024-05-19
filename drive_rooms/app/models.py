@@ -1,12 +1,12 @@
-import time
 from uuid import uuid4
 
-from database import Base
 from sqlalchemy import Boolean, ForeignKey, String, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.services.database import Base
 
 
 class Room(Base):
@@ -20,17 +20,9 @@ class Room(Base):
 
     @classmethod
     async def get_by_name(cls, db: AsyncSession, name: str):
-        start_time = time.time()
-        print("Start")
         stmt = select(cls).where(cls.name == name)
-        end_time = time.time()
-        print(f"End um: {end_time - start_time}")
         result = await db.execute(stmt)
-        end_time_2 = time.time()
-        print("end dois ", end_time_2 - start_time)
         result_2 = result.scalars().first()
-        end_time_3 = time.time()
-        print("end tres ", end_time_3 - start_time)
         return result_2
 
     @classmethod
@@ -73,6 +65,7 @@ class Files(Base):
     extension: Mapped[str] = mapped_column(String, nullable=False)
     deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     file_url: Mapped[str] = mapped_column(String, nullable=False)
+    added_by: Mapped[str] = mapped_column(String, default="Anonimo")
     room = relationship("Room", back_populates="files")
 
     @classmethod

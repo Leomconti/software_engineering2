@@ -1,18 +1,19 @@
 import os
 import uuid
 
-from database import get_db
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from models import Files, Room
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import Files, Room
+from app.services.database import get_db
+
 router = APIRouter(tags=["rooms"])
-templates = Jinja2Templates(directory="templates")
-router.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="app/templates")
+router.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 @router.get("/rooms")
@@ -24,6 +25,7 @@ class RoomCreate(BaseModel):
     name: str
     password: str
     create: bool
+    user_name: str
 
 
 @router.post("/rooms")
@@ -43,11 +45,11 @@ async def create_room(request: Request, room: RoomCreate, db: AsyncSession = Dep
 
         room_id = existing_room.id
 
-    return {"room_id": room_id}
+    return {"room_id": room_id, "user_name": room.user_name}
 
 
-@router.get("/rooms/{room_id}", response_class=HTMLResponse)
-async def get_room(request: Request, room_id: str, db: AsyncSession = Depends(get_db)):
+@router.get("/rooms/{room_id}/{user_name}", response_class=HTMLResponse)
+async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSession = Depends(get_db)):
     room = await Room.get(db, room_id)
     if not room:
         return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
@@ -61,6 +63,7 @@ async def get_room(request: Request, room_id: str, db: AsyncSession = Depends(ge
             "room_password": room.password,
             "files": files,
             "room_id": room_id,
+            "user_name": user_name,
         },
     )
 
@@ -81,19 +84,23 @@ class FileCreate(BaseModel):
     extension: str
 
 
-@router.post("/rooms/{room_id}/files")
-async def create_room_file(room_id: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+@router.post("/rooms/{room_id}/{user_name}/files")
+async def create_room_file(room_id: str, user_name: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
     contents = await file.read()
-    filename = file.filename if file.filename else uuid.uuid4().hex
-    file_directory = "files"
-    os.makedirs(file_directory, exist_ok=True)
-    file_path = os.path.join(file_directory, filename)
-
-    # Save the uploaded file to the server
+    if file.filename is None:
+        filename = uuid.uuid4().hex
+    else:
+        filename = file.filename
+    file_path = f"files/{filename}"
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(contents)
 
-    new_file = Files(name=filename, extension=filename.split(".")[-1], room=room_id, file_url=file_path)
+    room = await Room.get(db, room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    new_file = Files(name=filename, extension=filename.split(".")[-1], room=room, file_url=file_path, added_by=user_name)
     db.add(new_file)
     await db.commit()
     return {"filename": file.filename, "content_type": file.content_type}
