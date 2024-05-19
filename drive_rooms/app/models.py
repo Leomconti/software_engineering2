@@ -1,18 +1,21 @@
 from uuid import uuid4
 
-import database as database
+from database import Base
 from sqlalchemy import Boolean, ForeignKey, String, select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
-class Room(database.Base):
+class Room(Base):
     __tablename__ = "rooms"
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
+    files = relationship(
+        "Files", back_populates="room"
+    )  # This is a 1 -> many relationship, it's just sugar from sqlalchemy to be abble to access more easily
 
     @classmethod
     async def get_by_name(cls, db: AsyncSession, name: str):
@@ -52,18 +55,19 @@ class Room(database.Base):
         return new_room
 
 
-class Files(database.Base):
+class Files(Base):
     __tablename__ = "files"
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    room: Mapped[Room] = mapped_column(UUID(as_uuid=True), ForeignKey(Room.id))
+    room_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("rooms.id"))
     name: Mapped[str] = mapped_column(String, nullable=False)
     extension: Mapped[str] = mapped_column(String, nullable=False)
     deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     file_url: Mapped[str] = mapped_column(String, nullable=False)
+    room = relationship("Room", back_populates="files")
 
     @classmethod
     async def get_all_by_room(cls, db: AsyncSession, room_id: str):
-        stmt = select(cls).where(cls.room == room_id)
+        stmt = select(cls).where(cls.room_id == room_id)
         result = await db.execute(stmt)
         return result.scalars().all()
 
@@ -77,7 +81,14 @@ class Files(database.Base):
             return None
         return transaction
 
-    # Proabbly we can just get the class adjust and save
+    @classmethod
+    async def delete_by_id(cls, db: AsyncSession, id: str):
+        transaction = await db.get(cls, id)
+        if transaction is None:
+            raise NoResultFound
+        await db.delete(transaction)
+        await db.commit()
+
     @classmethod
     async def update_by_id(cls, db: AsyncSession, id: str, **kwargs):
         transaction = await db.get(cls, id)

@@ -13,18 +13,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 load_dotenv()
 
-sessionmanager.init(str(os.getenv("DATABASE_URL")))
 print("passing through here")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    sessionmanager.init(str(os.getenv("DATABASE_URL")))
     yield
     if sessionmanager._engine is not None:
         await sessionmanager.close()
 
 
 app = FastAPI(lifespan=lifespan)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 app.include_router(room_router)

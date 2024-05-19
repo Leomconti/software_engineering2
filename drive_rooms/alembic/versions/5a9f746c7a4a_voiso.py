@@ -1,8 +1,8 @@
-"""initial_revision
+"""voiso
 
-Revision ID: b2741f1e9458
-Revises: 
-Create Date: 2024-05-13 21:30:38.178619
+Revision ID: 5a9f746c7a4a
+Revises: 159039cebc42
+Create Date: 2024-05-19 12:32:55.653345
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'b2741f1e9458'
-down_revision: Union[str, None] = None
+revision: str = '5a9f746c7a4a'
+down_revision: Union[str, None] = '159039cebc42'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -28,12 +28,12 @@ def upgrade() -> None:
     )
     op.create_table('files',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('room', sa.UUID(), nullable=False),
+    sa.Column('room_id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('extension', sa.String(), nullable=False),
     sa.Column('deleted', sa.Boolean(), nullable=False),
     sa.Column('file_url', sa.String(), nullable=False),
-    sa.ForeignKeyConstraint(['room'], ['rooms.id'], ),
+    sa.ForeignKeyConstraint(['room_id'], ['rooms.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
