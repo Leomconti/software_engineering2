@@ -45,10 +45,9 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    alert(create ? "Room created successfully!" : "Joined room successfully!");
                     window.location.href = `/rooms/${result.room_id}`;
                 } else {
-                    alert("Failed to process your request.");
+                    alert("Error ao processar a requisição. Estaremos de volta em alguns minutos");
                 }
             }
         </script>

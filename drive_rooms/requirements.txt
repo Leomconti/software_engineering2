@@ -4,3 +4,4 @@ sqlalchemy
 asyncio
 asyncpg
 greenlet
+psycopg2-binary

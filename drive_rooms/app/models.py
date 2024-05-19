@@ -1,3 +1,4 @@
+import time
 from uuid import uuid4
 
 from database import Base
@@ -11,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 class Room(Base):
     __tablename__ = "rooms"
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
     files = relationship(
         "Files", back_populates="room"
@@ -19,9 +20,18 @@ class Room(Base):
 
     @classmethod
     async def get_by_name(cls, db: AsyncSession, name: str):
+        start_time = time.time()
+        print("Start")
         stmt = select(cls).where(cls.name == name)
+        end_time = time.time()
+        print(f"End um: {end_time - start_time}")
         result = await db.execute(stmt)
-        return result.scalars().first()
+        end_time_2 = time.time()
+        print("end dois ", end_time_2 - start_time)
+        result_2 = result.scalars().first()
+        end_time_3 = time.time()
+        print("end tres ", end_time_3 - start_time)
+        return result_2
 
     @classmethod
     async def get_all(cls, db: AsyncSession):
@@ -58,7 +68,7 @@ class Room(Base):
 class Files(Base):
     __tablename__ = "files"
     id: Mapped[str] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    room_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("rooms.id"))
+    room_id: Mapped[str] = mapped_column(UUID(as_uuid=True), ForeignKey("rooms.id"), index=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     extension: Mapped[str] = mapped_column(String, nullable=False)
     deleted: Mapped[bool] = mapped_column(Boolean, default=False)
