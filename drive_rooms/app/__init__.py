@@ -32,6 +32,7 @@ def init_app() -> FastAPI:
 
     server = FastAPI(debug=True, lifespan=lifespan)
     server.mount("/static", StaticFiles(directory="app/static"), name="static")
+    server.mount("/files", StaticFiles(directory="app/files"), name="files")
 
     @server.get("/")
     async def read_root():

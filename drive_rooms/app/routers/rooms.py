@@ -14,6 +14,7 @@ from app.services.database import get_db
 router = APIRouter(tags=["rooms"])
 templates = Jinja2Templates(directory="app/templates")
 router.mount("/static", StaticFiles(directory="app/static"), name="static")
+router.mount("/files", StaticFiles(directory="app/files"), name="files")
 
 
 @router.get("/rooms")
@@ -85,13 +86,15 @@ class FileCreate(BaseModel):
 
 
 @router.post("/rooms/{room_id}/{user_name}/files")
-async def create_room_file(room_id: str, user_name: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def create_room_file(
+    room_id: str, user_name: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
+):
     contents = await file.read()
     if file.filename is None:
         filename = uuid.uuid4().hex
     else:
         filename = file.filename
-    file_path = f"files/{filename}"
+    file_path = f"app/files/{filename}"
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "wb") as f:
         f.write(contents)
@@ -100,7 +103,9 @@ async def create_room_file(room_id: str, user_name: str, file: UploadFile = File
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
 
-    new_file = Files(name=filename, extension=filename.split(".")[-1], room=room, file_url=file_path, added_by=user_name)
+    new_file = Files(
+        name=filename, extension=filename.split(".")[-1], room=room, file_url=f"files/{filename}", added_by=user_name
+    )
     db.add(new_file)
     await db.commit()
     return {"filename": file.filename, "content_type": file.content_type}
