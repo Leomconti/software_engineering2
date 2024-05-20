@@ -1,6 +1,6 @@
+from app.processors.jpg_processor import JPGProcessor
 from app.processors.pdf_processor import PDFProcessor
 from app.processors.png_processor import PNGProcessor
-from app.processors.jpg_processor import JPGProcessor
 
 
 class FileProcessorFactory:

@@ -58,7 +58,7 @@ class FileHandler:
             room=room,
             file_url=f"uploads/{filename}",
             added_by=user_name,
-            thumbnail_url=f"uploads/thumbnails/{filename}",
+            thumbnail_url=f"uploads/thumbnails/{filename.replace('pdf', 'png')}",  # if it's pdf, the thumb goes to png, ugly to do here but works :)
         )
         db.add(new_file)
         await db.commit()
