@@ -1,0 +1,15 @@
+@startuml deployment
+node "Cloud Provider" {
+    node "FastAPI Server" {
+        [App & Static]
+    }
+    database "PostgreSQL Database" as PostgreSQL_DB
+}
+
+actor Client as "User - Browser"
+cloud "Cloudflare DNS" as Cloudflare
+
+Client --> Cloudflare : DNS Requests proxied through cloudflare
+Cloudflare --> "FastAPI Server" : HTTP Requests
+"FastAPI Server" --> PostgreSQL_DB : SQL Queries with ORM
+@enduml
