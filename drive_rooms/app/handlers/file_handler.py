@@ -1,11 +1,12 @@
 import os
-from uuid import uuid4
+import uuid
 
 from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Files, Room
+from app.processors.file_processor_factory import FileProcessorFactory
 
 
 class FileRename(BaseModel):
@@ -32,30 +33,33 @@ class FileHandler:
 
     @staticmethod
     async def create_room_file(room_id: str, user_name: str, file: UploadFile, db: AsyncSession):
+        contents = await file.read()
+        filename = file.filename if file.filename else uuid.uuid4().hex
+        file_extension = filename.split(".")[-1].lower()
+        file_path = f"app/uploads/{filename}"
+        thumbnail_path = f"app/uploads/thumbnails/{filename}"
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(thumbnail_path), exist_ok=True)
+
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
         room = await Room.get(db, room_id)
         if not room:
             raise HTTPException(status_code=404, detail="Sala não encontrada")
 
-        # Check if the room already has 5 files
-        files = await Files.get_all_by_room(db, room_id)
-        if len(files) >= 5:
-            raise HTTPException(status_code=400, detail="Limite de 5 arquivos atingido")
-
-        contents = await file.read()
-        filename = file.filename if file.filename else uuid4().hex
-        file_path = f"app/files/{filename}"
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "wb") as f:
-            f.write(contents)
+        # Generate thumbnail
+        processor = FileProcessorFactory.get_processor(file_extension)
+        await processor.generate_thumbnail(file_path, thumbnail_path)
 
         new_file = Files(
             name=filename,
-            extension=filename.split(".")[-1],
+            extension=file_extension,
             room=room,
             file_url=f"uploads/{filename}",
             added_by=user_name,
+            thumbnail_url=f"uploads/thumbnails/{filename}",
         )
         db.add(new_file)
         await db.commit()
-        await db.refresh(new_file)
-        return {"filename": file.filename, "content_type": file.content_type}
+        return new_file
