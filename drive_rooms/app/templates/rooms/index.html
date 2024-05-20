@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{ room_name }} - Files</title>
+        <link rel="stylesheet" href="/static/css/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Room: {{ room_name }}</h1>
+            <p>Password: {{ room_password }}</p>
+            <p>User: {{ user_name }}</p>
+
+            <h2>Files</h2>
+            <ul class="files-list">
+                {% for file in files %}
+                <li>
+                    <div>
+                        <a download href="/{{ file.file_url }}">{{ file.name }}.{{ file.extension }}</a>
+                        <span>(Added by: {{ file.added_by }})</span>
+                    </div>
+                    <button class="delete-button" onclick="confirmDeleteFile('{{ file.id }}')">Delete</button>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <h3>Upload New File</h3>
+            <form id="uploadForm" class="form-group">
+                <input type="file" id="fileInput" name="file" />
+                <button type="submit" class="upload-button">Upload</button>
+            </form>
+
+            <h3>Delete Room</h3>
+            <button class="delete-button" onclick="confirmDeleteRoom('{{ room_id }}')">Delete Room</button>
+        </div>
+
+        <div class="bottom-button">
+            <button onclick="location.href='/'">Voltar para a Página Inicial</button>
+        </div>
+
+        <script>
+            document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const fileInput = document.getElementById("fileInput");
+                const formData = new FormData();
+                formData.append("file", fileInput.files[0]);
+
+                try {
+                    const response = await fetch(`/rooms/{{ room_id }}/{{ user_name }}/files`, {
+                        method: "POST",
+                        body: formData,
+                    });
+
+                    if (response.ok) {
+                        location.reload(); // We reload so the file is shown in the list ( could be improved by returning the details... but idc)
+                    } else {
+                        const errorDetail = await response.json();
+                        alert(`Erro: ${errorDetail.detail}`);
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
+                }
+            });
+
+            async function confirmDeleteFile(fileId) {
+                const confirmed = confirm("Tem certeza que deseja excluir este arquivo?");
+                if (confirmed) {
+                    deleteFile(fileId);
+                }
+            }
+
+            async function deleteFile(fileId) {
+                try {
+                    const response = await fetch(`/files/${fileId}`, {
+                        method: "DELETE",
+                    });
+
+                    if (response.ok) {
+                        location.reload(); // Same thing as add reload
+                    } else {
+                        const errorDetail = await response.json();
+                        alert(`Erro: ${errorDetail.detail}`);
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
+                }
+            }
+
+            async function confirmDeleteRoom(roomId) {
+                const confirmed = confirm("Tem certeza que deseja excluir esta sala?");
+                if (confirmed) {
+                    deleteRoom(roomId);
+                }
+            }
+
+            async function deleteRoom(roomId) {
+                try {
+                    const response = await fetch(`/rooms/${roomId}`, {
+                        method: "DELETE",
+                    });
+
+                    if (response.ok) {
+                        window.location.href = "/"; // Redirect to the home page after deleting the room
+                    } else {
+                        const errorDetail = await response.json();
+                        alert(`Erro: ${errorDetail.detail}`);
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
+                }
+            }
+        </script>
+    </body>
+</html>

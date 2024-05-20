@@ -10,27 +10,48 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import declarative_base
 
+# Base class for SQLAlchemy ORM, we won't need anything fancy rn
 Base = declarative_base()
 
 
+# @Rafael Pattern 1, Singleton implementation, following FastAPI implementation that needs yielding connections for dependency injection
 class DatabaseSessionManager:
+    """
+    Manages the database connection and session lifecycle.
+    Implements a singleton pattern to ensure only one instance is used.
+    """
+
     def __init__(self):
         self._engine: AsyncEngine | None = None
         self._sessionmaker: async_sessionmaker | None = None
 
     def init(self, host: str):
-        self._engine = create_async_engine(host)
+        """
+        Initializes the database engine and sessionmaker.
+        """
+        # Create an asynchronous engine with connection recycling
+        self._engine = create_async_engine(
+            host, pool_recycle=1800
+        )  # Recycle connections every 30 minutes, otherwise it will die and throw error
+        # Create a sessionmaker bound to the engine
         self._sessionmaker = async_sessionmaker(autocommit=False, bind=self._engine)
 
     async def close(self):
+        """
+        Closes the database engine and resets the engine and sessionmaker.
+        """
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
+        # Dispose of the engine and reset engine and sessionmaker to None
         await self._engine.dispose()
         self._engine = None
         self._sessionmaker = None
 
     @contextlib.asynccontextmanager
     async def connect(self) -> AsyncIterator[AsyncConnection]:
+        """
+        Provides a connection to the database within a context manager.
+        """
         if self._engine is None:
             raise Exception("DatabaseSessionManager is not initialized")
 
@@ -43,9 +64,13 @@ class DatabaseSessionManager:
 
     @contextlib.asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
+        """
+        Provides a session to the database within a context manager.
+        """
         if self._sessionmaker is None:
             raise Exception("DatabaseSessionManager is not initialized")
 
+        # Create a new session from the sessionmaker
         session = self._sessionmaker()
         try:
             yield session
@@ -56,9 +81,14 @@ class DatabaseSessionManager:
             await session.close()
 
 
+# Instantiate the singleton DatabaseSessionManager # Pattern 1
 sessionmanager = DatabaseSessionManager()
 
 
 async def get_db():
+    """
+    Dependency function to provide a database session.
+    """
+    # Use the session context manager to provide a session
     async with sessionmanager.session() as session:
         yield session

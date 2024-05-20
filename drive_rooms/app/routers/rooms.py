@@ -1,63 +1,32 @@
-import os
-import uuid
-
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Files, Room
+from app.handlers.file_handler import FileHandler
+from app.handlers.room_handler import RoomCreate, RoomHandler
 from app.services.database import get_db
 
 router = APIRouter(tags=["rooms"])
-templates = Jinja2Templates(directory="app/templates")
-router.mount("/static", StaticFiles(directory="app/static"), name="static")
-router.mount("/files", StaticFiles(directory="app/files"), name="files")
+templates = Jinja2Templates(directory="app/templates/rooms")
 
 
 @router.get("/rooms")
 async def get_rooms(db: AsyncSession = Depends(get_db)):
-    return await Room.get_all(db)
-
-
-class RoomCreate(BaseModel):
-    name: str
-    password: str
-    create: bool
-    user_name: str
+    return await RoomHandler.get_rooms(db)
 
 
 @router.post("/rooms")
 async def create_room(request: Request, room: RoomCreate, db: AsyncSession = Depends(get_db)):
-    if room.create:
-        existing_room = await Room.get_by_name(db, room.name)
-        if existing_room:
-            raise HTTPException(status_code=400, detail="Room with this name already exists")
-        new_room = await Room.create(db, room.name, room.password)
-        room_id = new_room.id
-    else:
-        existing_room = await Room.get_by_name(db, room.name)
-        if not existing_room:
-            raise HTTPException(status_code=404, detail="Room not found")
-        if room.password != existing_room.password:
-            raise HTTPException(status_code=400, detail="Password incorrect")
-
-        room_id = existing_room.id
-
-    return {"room_id": room_id, "user_name": room.user_name}
+    return await RoomHandler.create_room(room, db)
 
 
 @router.get("/rooms/{room_id}/{user_name}", response_class=HTMLResponse)
 async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSession = Depends(get_db)):
-    room = await Room.get(db, room_id)
-    if not room:
-        return templates.TemplateResponse("not_found.html", {"request": request}, status_code=404)
-
-    files = await Files.get_all_by_room(db, room_id)
+    room = await RoomHandler.get_room(room_id, db)
+    files = await FileHandler.get_room_files(room_id, db)
     return templates.TemplateResponse(
-        "room.html",
+        "index.html",
         {
             "request": request,
             "room_name": room.name,
@@ -70,59 +39,28 @@ async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSess
 
 
 @router.delete("/rooms/{room_id}")
-async def delete_room(room_id: str, db: AsyncSession = Depends(get_db)):
-    await Room.delete_by_id(db, room_id)
-    return {"message": "Room deleted"}
+async def delete_room(room_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+    return await RoomHandler.delete_room(room_id, db)
 
 
 @router.get("/rooms/{room_id}/files")
 async def get_room_files(room_id: str, db: AsyncSession = Depends(get_db)):
-    return await Files.get_all_by_room(db, room_id)
-
-
-class FileCreate(BaseModel):
-    name: str
-    extension: str
+    return await FileHandler.get_room_files(room_id, db)
 
 
 @router.post("/rooms/{room_id}/{user_name}/files")
 async def create_room_file(
     room_id: str, user_name: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
 ):
-    contents = await file.read()
-    if file.filename is None:
-        filename = uuid.uuid4().hex
-    else:
-        filename = file.filename
-    file_path = f"app/files/{filename}"
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    with open(file_path, "wb") as f:
-        f.write(contents)
-
-    room = await Room.get(db, room_id)
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-
-    new_file = Files(
-        name=filename, extension=filename.split(".")[-1], room=room, file_url=f"files/{filename}", added_by=user_name
-    )
-    db.add(new_file)
-    await db.commit()
-    return {"filename": file.filename, "content_type": file.content_type}
+    return await FileHandler.create_room_file(room_id, user_name, file, db)
 
 
 @router.get("/files/{file_id}")
-async def get_file(file_id: str, db: AsyncSession = Depends(get_db)):
-    file = await Files.get_by_id(db, file_id)
-    if not file:
-        raise HTTPException(status_code=404, detail="File not found")
+async def get_file(file_id: str, db: AsyncSession = Depends(get_db)) -> FileResponse:
+    file = await FileHandler.get_file(file_id, db)
     return FileResponse(file.file_url)
 
 
 @router.delete("/files/{file_id}")
-async def delete_file(file_id: str, db: AsyncSession = Depends(get_db)):
-    file = await Files.get_by_id(db, file_id)
-    if not file:
-        raise HTTPException(status_code=404, detail="File not found")
-    await Files.delete_by_id(db, file_id)
-    return {"message": "File deleted"}
+async def delete_file(file_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
+    return await FileHandler.delete_file(file_id, db)
