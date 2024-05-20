@@ -1,0 +1,62 @@
+@startuml class_diagram
+class DatabaseSessionManager {
+    +init(host: str)
+    +close()
+    +connect() AsyncIterator[AsyncConnection]
+    +session() AsyncIterator[AsyncSession]
+}
+
+class Room {
+    +id: str
+    +name: str
+    +password: str
+    +files: List[Files]
+    +get_by_name(db: AsyncSession, name: str)
+    +get_all(db: AsyncSession)
+    +get(db: AsyncSession, id: str)
+    +delete_by_id(db: AsyncSession, id: str)
+    +create(db: AsyncSession, name: str, password: str)
+}
+
+class Files {
+    +id: str
+    +room_id: str
+    +name: str
+    +extension: str
+    +deleted: bool
+    +file_url: str
+    +added_by: str
+    +thumbnail_url: str
+    +get_all_by_room(db: AsyncSession, room_id: str)
+    +get_by_id(db: AsyncSession, id: str)
+    +delete_by_id(db: AsyncSession, id: str)
+    +update_by_id(db: AsyncSession, id: str, **kwargs)
+}
+
+abstract class FileProcessor {
+    +generate_thumbnail(file_path: str, thumbnail_path: str)
+}
+
+class PDFProcessor {
+    +generate_thumbnail(file_path: str, thumbnail_path: str)
+}
+
+class PNGProcessor {
+    +generate_thumbnail(file_path: str, thumbnail_path: str)
+}
+
+class JPGProcessor {
+    +generate_thumbnail(file_path: str, thumbnail_path: str)
+}
+
+class FileProcessorFactory {
+    +get_processor(file_extension: str) : FileProcessor
+}
+
+Room "1" --> "*" Files : contains
+FileProcessor <|-- PDFProcessor
+FileProcessor <|-- PNGProcessor
+FileProcessor <|-- JPGProcessor
+FileProcessorFactory --> FileProcessor : creates
+Files --> FileProcessorFactory : uses
+@enduml
