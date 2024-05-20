@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Room Form</title>
+        <link rel="stylesheet" href="/static/css/styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome to Drive Rooms</h1>
+            <div class="form-container">
+                <form id="roomForm" class="form">
+                    <div class="form-group">
+                        <label for="roomName">Room Name:</label>
+                        <input type="text" id="roomName" name="roomName" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="nickName">Nickname:</label>
+                        <input type="text" id="nickName" name="nickName" required />
+                    </div>
+                    <div class="button-group">
+                        <button type="button" id="createButton" onclick="createRoom(true)">Create Room</button>
+                        <button type="button" id="joinButton" onclick="createRoom(false)">Join Room</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            async function createRoom(create) {
+                const roomName = document.getElementById("roomName").value;
+                const password = document.getElementById("password").value;
+                const username = document.getElementById("nickName").value;
+                const button = create ? document.getElementById("createButton") : document.getElementById("joinButton");
+
+                button.disabled = true;
+                button.classList.add("loading");
+                button.innerHTML = `${create ? "Create Room" : "Join Room"} <div class="loading-spinner"></div>`;
+
+                try {
+                    const response = await fetch("/rooms", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            name: roomName,
+                            password: password,
+                            create: create,
+                            user_name: username,
+                        }),
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        window.location.href = `/rooms/${result.room_id}/${result.user_name}`;
+                    } else {
+                        alert("Error ao processar a requisição. Estaremos de volta em alguns minutos");
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro. Por favor, tente novamente mais tarde.");
+                } finally {
+                    button.disabled = false;
+                    button.classList.remove("loading");
+                    button.innerHTML = create ? "Create Room" : "Join Room";
+                }
+            }
+        </script>
+    </body>
+</html>

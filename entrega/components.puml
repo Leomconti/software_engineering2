@@ -15,18 +15,13 @@ package "Processors" {
     [JPGProcessor]
 }
 
-package "Static Page" {
-    [StaticPage]
-}
-
 package "API" {
     [APIEntryPoint]
 }
 
-actor User
+actor Customer
 
-User --> [StaticPage] : interacts
-[StaticPage] --> [APIEntryPoint] : interacts
+Customer --> [APIEntryPoint] : interacts
 [APIEntryPoint] --> [RoomManager] : uses
 [APIEntryPoint] --> [FileManager] : uses
 [RoomManager] --> [PostgreSQL] : uses
