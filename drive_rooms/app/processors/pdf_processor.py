@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF for PDF processing
+import fitz  # PyMuPDF
 
 from app.processors.file_processor import FileProcessor
 

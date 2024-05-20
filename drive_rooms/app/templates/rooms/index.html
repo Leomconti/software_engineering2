@@ -12,7 +12,6 @@
             <p>Password: {{ room_password }}</p>
             <p>User: {{ user_name }}</p>
             <p>Files: {{ file_count }} / 5</p>
-            <!-- Display the file count -->
 
             <h2>Files</h2>
             <ul class="files-list">
@@ -44,7 +43,6 @@
                     <button type="button" class="cancel-button" onclick="cancelUpload()">Cancel</button>
                 </div>
                 <p id="fileLimitMessage" class="error-message"></p>
-                <!-- Message to show file limit error -->
             </form>
 
             <h3>Delete Room</h3>
@@ -80,6 +78,10 @@
                     if (response.ok) {
                         location.reload(); // We reload so the file is shown in the list ( could be improved by returning the details... but idc)
                     } else {
+                        if (response.status === 422) {
+                            const errorDetail = await response.json();
+                            alert(`Insira um arquivo, porfavor`);
+                        }
                         const errorDetail = await response.json();
                         alert(`Erro: ${errorDetail.detail}`);
                     }
@@ -90,7 +92,7 @@
 
             function cancelUpload() {
                 const fileInput = document.getElementById("fileInput");
-                fileInput.value = ""; // Clear the file input value
+                fileInput.value = ""; // Clear the file input value, to remove current selected file
             }
 
             async function confirmDeleteFile(fileId) {
