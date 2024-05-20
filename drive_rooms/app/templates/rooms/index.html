@@ -24,7 +24,7 @@
                         {% endif %}
                         <div class="file-details">
                             <a download="{{ file.name }}.{{ file.extension }}" href="/{{ file.file_url }}"
-                                >{{ file.name }}</a
+                                >{{ file.name }}.{{ file.extension }}</a
                             >
                             <span>(Added by: {{ file.added_by }})</span>
                         </div>
@@ -43,6 +43,8 @@
                     <button type="submit" class="upload-button">Upload</button>
                     <button type="button" class="cancel-button" onclick="cancelUpload()">Cancel</button>
                 </div>
+                <p id="fileLimitMessage" class="error-message"></p>
+                <!-- Message to show file limit error -->
             </form>
 
             <h3>Delete Room</h3>
@@ -54,7 +56,16 @@
         </div>
 
         <script>
+            const fileCount = {{ file_count }};
+            const fileLimit = 5;
+
             document.getElementById("uploadForm").addEventListener("submit", async (event) => {
+                if (fileCount >= fileLimit) {
+                    event.preventDefault();
+                    document.getElementById("fileLimitMessage").innerText = "This room only supports 5 files.";
+                    return;
+                }
+
                 event.preventDefault();
                 const fileInput = document.getElementById("fileInput");
                 const formData = new FormData();
@@ -69,11 +80,8 @@
                     if (response.ok) {
                         location.reload(); // We reload so the file is shown in the list ( could be improved by returning the details... but idc)
                     } else {
-                        if (response.status === 422) {
-                            alert(`Por favor, insira um arquivo válido para prosseguir`);
-                        } else {
-                            alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
-                        }
+                        const errorDetail = await response.json();
+                        alert(`Erro: ${errorDetail.detail}`);
                     }
                 } catch (error) {
                     alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
@@ -82,7 +90,7 @@
 
             function cancelUpload() {
                 const fileInput = document.getElementById("fileInput");
-                fileInput.value = ""; // Clear the file input value, remove the file basically
+                fileInput.value = ""; // Clear the file input value
             }
 
             async function confirmDeleteFile(fileId) {
