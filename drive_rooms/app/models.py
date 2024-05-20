@@ -66,6 +66,7 @@ class Files(Base):
     deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     file_url: Mapped[str] = mapped_column(String, nullable=False)
     added_by: Mapped[str] = mapped_column(String, default="Anonimo")
+    thumbnail_url: Mapped[str] = mapped_column(String, nullable=True)
     room = relationship("Room", back_populates="files")
 
     @classmethod

@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.handlers.file_handler import FileHandler
+from app.handlers.file_handler import FileHandler, FileRename
 from app.handlers.room_handler import RoomCreate, RoomHandler
 from app.services.database import get_db
 
@@ -25,6 +25,7 @@ async def create_room(request: Request, room: RoomCreate, db: AsyncSession = Dep
 async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSession = Depends(get_db)):
     room = await RoomHandler.get_room(room_id, db)
     files = await FileHandler.get_room_files(room_id, db)
+    file_count = len(files)
     return templates.TemplateResponse(
         "index.html",
         {
@@ -32,6 +33,7 @@ async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSess
             "room_name": room.name,
             "room_password": room.password,
             "files": files,
+            "file_count": file_count,
             "room_id": room_id,
             "user_name": user_name,
         },
@@ -58,9 +60,18 @@ async def create_room_file(
 @router.get("/files/{file_id}")
 async def get_file(file_id: str, db: AsyncSession = Depends(get_db)) -> FileResponse:
     file = await FileHandler.get_file(file_id, db)
+    if file is None:
+        raise HTTPException(
+            status_code=404, detail="Houve um probleminha ao baixar o arquivo, tente novamente mais tarde"
+        )
     return FileResponse(file.file_url)
 
 
 @router.delete("/files/{file_id}")
 async def delete_file(file_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, str]:
     return await FileHandler.delete_file(file_id, db)
+
+
+@router.put("/files/{file_id}/rename")
+async def rename_file(file_id: str, file_rename: FileRename, db: AsyncSession = Depends(get_db)):
+    return await FileHandler.rename_file(file_id, file_rename.new_name, db)

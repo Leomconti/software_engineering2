@@ -11,16 +11,27 @@
             <h1>Room: {{ room_name }}</h1>
             <p>Password: {{ room_password }}</p>
             <p>User: {{ user_name }}</p>
+            <p>Files: {{ file_count }} / 5</p>
+            <!-- Display the file count -->
 
             <h2>Files</h2>
             <ul class="files-list">
                 {% for file in files %}
                 <li>
-                    <div>
-                        <a download href="/{{ file.file_url }}">{{ file.name }}.{{ file.extension }}</a>
-                        <span>(Added by: {{ file.added_by }})</span>
+                    <div class="file-item">
+                        {% if file.thumbnail_url %}
+                        <img src="/{{ file.thumbnail_url }}" alt="Thumbnail" class="thumbnail" />
+                        {% endif %}
+                        <div class="file-details">
+                            <a download="{{ file.name }}.{{ file.extension }}" href="/{{ file.file_url }}"
+                                >{{ file.name }}.{{ file.extension }}</a
+                            >
+                            <span>(Added by: {{ file.added_by }})</span>
+                        </div>
+                        <input type="text" id="renameInput_{{ file.id }}" placeholder="New name" />
+                        <button class="rename-button" onclick="renameFile('{{ file.id }}')">Rename</button>
+                        <button class="delete-button" onclick="confirmDeleteFile('{{ file.id }}')">Delete</button>
                     </div>
-                    <button class="delete-button" onclick="confirmDeleteFile('{{ file.id }}')">Delete</button>
                 </li>
                 {% endfor %}
             </ul>
@@ -28,7 +39,10 @@
             <h3>Upload New File</h3>
             <form id="uploadForm" class="form-group">
                 <input type="file" id="fileInput" name="file" />
-                <button type="submit" class="upload-button">Upload</button>
+                <div class="upload-buttons">
+                    <button type="submit" class="upload-button">Upload</button>
+                    <button type="button" class="cancel-button" onclick="cancelUpload()">Cancel</button>
+                </div>
             </form>
 
             <h3>Delete Room</h3>
@@ -55,13 +69,21 @@
                     if (response.ok) {
                         location.reload(); // We reload so the file is shown in the list ( could be improved by returning the details... but idc)
                     } else {
-                        const errorDetail = await response.json();
-                        alert(`Erro: ${errorDetail.detail}`);
+                        if (response.status === 422) {
+                            alert(`Por favor, insira um arquivo válido para prosseguir`);
+                        } else {
+                            alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
+                        }
                     }
                 } catch (error) {
                     alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
                 }
             });
+
+            function cancelUpload() {
+                const fileInput = document.getElementById("fileInput");
+                fileInput.value = ""; // Clear the file input value, remove the file basically
+            }
 
             async function confirmDeleteFile(fileId) {
                 const confirmed = confirm("Tem certeza que deseja excluir este arquivo?");
@@ -102,6 +124,33 @@
 
                     if (response.ok) {
                         window.location.href = "/"; // Redirect to the home page after deleting the room
+                    } else {
+                        const errorDetail = await response.json();
+                        alert(`Erro: ${errorDetail.detail}`);
+                    }
+                } catch (error) {
+                    alert("Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.");
+                }
+            }
+
+            async function renameFile(fileId) {
+                const newName = document.getElementById(`renameInput_${fileId}`).value;
+                if (!newName) {
+                    alert("Please enter a new name for the file.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/files/${fileId}/rename`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ new_name: newName }),
+                    });
+
+                    if (response.ok) {
+                        location.reload(); // Reload to show the updated file name
                     } else {
                         const errorDetail = await response.json();
                         alert(`Erro: ${errorDetail.detail}`);
