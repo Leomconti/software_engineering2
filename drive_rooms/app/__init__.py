@@ -22,17 +22,22 @@ async def check_db_connection():
         print("Database connection successful")
 
 
-def init_app() -> FastAPI:
-    sessionmanager.init(str(os.getenv("DATABASE_URL")))
+def init_app(init_db: bool=True) -> FastAPI:
+    # M3 We'll use init_db so we can do the tests without the actual postgres db 
+    if init_db:
+        sessionmanager.init(str(os.getenv("DATABASE_URL")))
 
-    @asynccontextmanager
-    async def lifespan(app: FastAPI):
-        await check_db_connection()
-        yield
-        if sessionmanager._engine is not None:
-            await sessionmanager.close()
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            await check_db_connection()
+            yield
+            if sessionmanager._engine is not None:
+                await sessionmanager.close()
+        
+        server = FastAPI(debug=True, lifespan=lifespan)
+    else:
+        server = FastAPI(debug=True)
 
-    server = FastAPI(debug=True, lifespan=lifespan)
     server.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

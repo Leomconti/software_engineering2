@@ -79,6 +79,13 @@ class DatabaseSessionManager:
             raise
         finally:
             await session.close()
+    
+    # This is to be used in tests, as we will be creating and dropping to test stuff    
+    async def create_all(self, connection: AsyncConnection):
+        await connection.run_sync(Base.metadata.create_all)
+
+    async def drop_all(self, connection: AsyncConnection):
+        await connection.run_sync(Base.metadata.drop_all)
 
 
 # Instantiate the singleton DatabaseSessionManager # Pattern 1

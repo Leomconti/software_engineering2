@@ -7,3 +7,4 @@ greenlet
 psycopg2-binary
 pymupdf
 pillow
+pytest-postgresql
