@@ -7,3 +7,4 @@ class JPGProcessor(FileProcessor):
         image = Image.open(file_path)
         image.thumbnail((100, 100))
         image.save(thumbnail_path)
+        return thumbnail_path
