@@ -21,11 +21,33 @@ async def create_room(request: Request, room: RoomCreate, db: AsyncSession = Dep
     return await RoomHandler.create_room(room, db)
 
 
-@router.get("/rooms/{room_id}/{user_name}", response_class=HTMLResponse)
-async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSession = Depends(get_db)):
+@router.get("/rooms/{room_id}/{user_name}")
+async def get_room(
+    request: Request, 
+    room_id: str, 
+    user_name: str, 
+    response_type: str = "html", 
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    We've added response type conditional so it can return a json response or html, based on the request,
+    this is really useful because of the integration tests, but also there are apis that use it so they can be 
+    a rest api and serve static repsonseons.
+    """
     room = await RoomHandler.get_room(room_id, db)
     files = await FileHandler.get_room_files(room_id, db)
     file_count = len(files)
+    
+    if response_type == "json":
+        return {
+            "room_name": room.name,
+            "room_password": room.password,
+            "files": files,
+            "file_count": file_count,
+            "room_id": room_id,
+            "user_name": user_name,
+        }
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -38,7 +60,6 @@ async def get_room(request: Request, room_id: str, user_name: str, db: AsyncSess
             "user_name": user_name,
         },
     )
-
 
 @router.delete("/rooms/{room_id}")
 async def delete_room(room_id: str, db: AsyncSession = Depends(get_db)) -> dict[str, str]:

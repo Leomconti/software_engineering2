@@ -1,16 +1,14 @@
-from httpx import Response
 import pytest
 from fastapi.testclient import TestClient
+from httpx import Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.handlers.room_handler import RoomHandler, RoomCreate
 from app.handlers.file_handler import FileHandler
-from fastapi import HTTPException, UploadFile
 from app.models import Room, Files
 
 """
-Commentarios for M3:
-Aqui temos as funcoes de teste de integração.
-Elas fazem o uso dos mocks criados em conftest (configuration for the test), para mockar o comportamento da db
+Commentarios para M3:
+Aqui temos as funcoes de teste de integração relacionadas às rotas de arquivos.
+Elas fazem o uso dos mocks criados em conftest (configuration for the test), para mockar o comportamento da db.
 E utilizamos tambem o cliente fastapi criado no mock para testar as rotas.
 """
 
@@ -86,16 +84,6 @@ async def test_download_file_after_rename(db: AsyncSession):
     assert renamed_file is not None, "RenamedFile is None"
     assert renamed_file.name == "new_test.png", f"FileName: Expected 'new_test.png', got '{renamed_file.name}'"
     print(f"Renamed File: {renamed_file}")
-
-
-@pytest.mark.asyncio
-async def test_delete_room(db: AsyncSession):
-    room = await create_mock_room(db)
-    response = await RoomHandler.delete_room(room.id, db)
-    assert response["message"] == "Sala excluída"
-    deleted_room = await db.get(Room, room.id)
-    assert deleted_room is None
-
 
 @pytest.mark.asyncio
 async def test_store_file_in_room_with_limit(client: TestClient):
