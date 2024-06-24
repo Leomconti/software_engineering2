@@ -41,5 +41,8 @@ class RoomHandler:
 
     @staticmethod
     async def delete_room(room_id: str, db: AsyncSession):
+        room = await Room.get(db, room_id)
+        if not room:
+            raise HTTPException(status_code=404, detail="Sala nao encontrada")
         await Room.delete_by_id(db, room_id)
         return {"message": "Sala excluída"}
