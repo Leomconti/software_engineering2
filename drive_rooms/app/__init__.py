@@ -46,14 +46,15 @@ def init_app(init_db: bool=True) -> FastAPI:
         allow_headers=["*"],
     )
 
-    server.mount("/static", StaticFiles(directory="app/static"), name="static")  # Static stuff, like css
-    server.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")  # Uploaded files
-    templates = Jinja2Templates(directory="app/templates/home")  # Template for home page
+    if init_db:
+        server.mount("/static", StaticFiles(directory="app/static"), name="static")  # Static stuff, like css
+        server.mount("/uploads", StaticFiles(directory="app/uploads"), name="uploads")  # Uploaded files
+        templates = Jinja2Templates(directory="app/templates/home")  # Template for home page
 
-    # Entry point, home page here!
-    @server.get("/")
-    async def read_root(request: Request):
-        return templates.TemplateResponse("index.html", {"request": request})
+        # Entry point, home page here!
+        @server.get("/")
+        async def read_root(request: Request):
+            return templates.TemplateResponse("index.html", {"request": request})
 
     server.include_router(room_router)
 

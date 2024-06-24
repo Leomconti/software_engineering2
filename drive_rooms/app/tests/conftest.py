@@ -49,7 +49,7 @@ async def connection_test(test_db, event_loop):
     pg_password = test_db.password
 
     with DatabaseJanitor(
-        user=pg_user, host=pg_host, port=pg_port, dbname=pg_db, version=test_db.version, pg_password
+        user=pg_user, host=pg_host, port=pg_port, dbname=pg_db, version=test_db.version, password=pg_password
     ):
         connection_str = f"postgresql+psycopg://{pg_user}:@{pg_host}:{pg_port}/{pg_db}"
         sessionmanager.init(connection_str)

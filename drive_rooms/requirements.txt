@@ -7,4 +7,8 @@ greenlet
 psycopg2-binary
 pymupdf
 pillow
+pytest
+pytest-asyncio
 pytest-postgresql
+pytest-mock
+pytest-cov
