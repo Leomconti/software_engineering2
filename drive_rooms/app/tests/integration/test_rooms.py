@@ -95,3 +95,28 @@ async def test_delete_room(db: AsyncSession):
     assert response["message"] == "Sala excluída"
     deleted_room = await db.get(Room, room.id)
     assert deleted_room is None
+
+
+@pytest.mark.asyncio
+async def test_store_file_in_room_with_limit(client: TestClient):
+    create_response: Response = client.post(
+        "/rooms",
+        json={"name": "TesteRoom", "password": "pwd", "create": True, "user_name": "UserDeTeste"},
+    )
+    assert create_response.status_code == 200, create_response.text
+    room_id = create_response.json().get("room_id")
+    assert room_id is not None, "Room ID is None"
+
+    file_path = "tests/artifacts/test_png.png"
+    file_data = {
+        "file": ("test_png.png", open(file_path, "rb"), "image/png"),
+    }
+
+    for _ in range(5):
+        store_response = client.post(f"/rooms/{room_id}/UserDeTeste/files", files=file_data)
+        assert store_response.status_code == 200, store_response.text
+    
+    # After 5 files we expect to get 400 - 
+    store_response = client.post(f"/rooms/{room_id}/UserDeTeste/files", files=file_data)
+    assert store_response.status_code == 400, store_response.text
+    assert store_response.json().get("detail") == "Você atingiu o limite de arquivos na sala, exclua um arquivo para adicionar outro"
