@@ -75,3 +75,4 @@ async def session_override(app, connection_test):
 async def db():
     async with sessionmanager.session() as session:
         yield session
+        

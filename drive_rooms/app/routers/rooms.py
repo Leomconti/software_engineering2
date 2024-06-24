@@ -54,6 +54,12 @@ async def get_room_files(room_id: str, db: AsyncSession = Depends(get_db)):
 async def create_room_file(
     room_id: str, user_name: str, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
 ):
+    files = await FileHandler.get_room_files(room_id, db)
+    file_count = len(files)
+    if file_count >= 5:
+        raise HTTPException(
+            status_code=400, detail="Você atingiu o limite de arquivos na sala, exclua um arquivo para adicionar outro"
+        )
     return await FileHandler.create_room_file(room_id, user_name, file, db)
 
 
