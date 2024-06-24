@@ -21,7 +21,6 @@ from app.services.database import get_db, sessionmanager
 
 test_db = factories.postgresql_proc(port=None, dbname="drive_test_db")
     
-# tests/integration/conftest.py
 @pytest.fixture(autouse=True)
 def app():
     with ExitStack():

@@ -32,6 +32,16 @@ async def test_create_room(client: TestClient):
     assert response_json["user_name"] == "UserDeTeste"
 
 @pytest.mark.asyncio
+async def test_join_inexistent_room(client: TestClient):
+    create_response: Response = client.post(
+        "/rooms",
+        json={"name": "TesteRoom", "password": "pwd", "create": False, "user_name": "UserDeTeste"},
+    )
+    assert create_response.status_code == 404, create_response.text
+    response_json = create_response.json()
+    assert response_json.get("detail") == "Sala não encontrada"
+
+@pytest.mark.asyncio
 async def test_get_rooms(client: TestClient, db: AsyncSession):
     await create_mock_room(db)
 
