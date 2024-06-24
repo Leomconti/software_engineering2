@@ -1,17 +1,13 @@
 import os
 import uuid
-
 from fastapi import HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models import Files, Room
 from app.processors.file_processor_factory import FileProcessorFactory
 
-
 class FileRename(BaseModel):
     new_name: str
-
 
 class FileHandler:
     @staticmethod
@@ -36,10 +32,12 @@ class FileHandler:
         contents = await file.read()
         filename = file.filename if file.filename else uuid.uuid4().hex
         file_extension = filename.split(".")[-1].lower()
-        file_path = f"app/uploads/{filename}"
-        thumbnail_path = f"app/uploads/thumbnails/{filename}"
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        os.makedirs(os.path.dirname(thumbnail_path), exist_ok=True)
+        file_dir = os.path.join("app", "uploads")
+        os.makedirs(file_dir, exist_ok=True)
+        file_path = os.path.join(file_dir, filename)
+        thumbnail_dir = os.path.join(file_dir, "thumbnails")
+        os.makedirs(thumbnail_dir, exist_ok=True)
+        thumbnail_path = os.path.join(thumbnail_dir, filename)
 
         with open(file_path, "wb") as f:
             f.write(contents)
@@ -56,10 +54,11 @@ class FileHandler:
             name=filename,
             extension=file_extension,
             room=room,
-            file_url=f"uploads/{filename}",
+            file_url=file_path,
             added_by=user_name,
-            thumbnail_url=f"uploads/thumbnails/{filename.replace('pdf', 'png')}",  # if it's pdf, the thumb goes to png, ugly to do here but works :)
+            thumbnail_url=thumbnail_path,
         )
         db.add(new_file)
         await db.commit()
-        return new_file
+        await db.refresh(new_file)
+        return {"id": new_file.id}

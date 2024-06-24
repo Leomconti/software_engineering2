@@ -11,7 +11,6 @@ class RoomCreate(BaseModel):
     create: bool
     user_name: str
 
-
 class RoomHandler:
     @staticmethod
     async def get_rooms(db: AsyncSession):

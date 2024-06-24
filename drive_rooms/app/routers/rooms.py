@@ -57,6 +57,7 @@ async def create_room_file(
     return await FileHandler.create_room_file(room_id, user_name, file, db)
 
 
+
 @router.get("/files/{file_id}")
 async def get_file(file_id: str, db: AsyncSession = Depends(get_db)) -> FileResponse:
     file = await FileHandler.get_file(file_id, db)
@@ -64,7 +65,7 @@ async def get_file(file_id: str, db: AsyncSession = Depends(get_db)) -> FileResp
         raise HTTPException(
             status_code=404, detail="Houve um probleminha ao baixar o arquivo, tente novamente mais tarde"
         )
-    return FileResponse(file.file_url)
+    return FileResponse(path=file.file_url)
 
 
 @router.delete("/files/{file_id}")
