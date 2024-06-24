@@ -7,6 +7,7 @@ from fastapi import HTTPException
 """
 Comentarios para M3:
 Aqui temos os testes unitarios para RoomHandler.
+Teremos testes em todas as operacoes de room, nos fluxos padrao e tambem alternativos.
 """
 
 @pytest.mark.asyncio

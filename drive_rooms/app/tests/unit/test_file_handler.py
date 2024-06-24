@@ -9,8 +9,11 @@ from app.models import Room, Files
 """
 Comentarios para M3:
 Aqui temos os testes unitarios para FileHandler.
+
+Teremos testes em todas as operacoes de file, nos fluxos padrao e tambem alternativos.
 """
 
+# Mocks em comum
 async def create_mock_room(db: AsyncSession, name="TesteRoom", password="pwd"):
     room = Room(name=name, password=password)
     db.add(room)
@@ -28,6 +31,8 @@ async def create_mock_file(db: AsyncSession, room, name="test.png", added_by="Us
 
 def get_test_upload_file(file_path: str, filename: str) -> UploadFile:
     return UploadFile(filename=filename, file=open(file_path, "rb"))
+
+# Fim dos mocks em comum, e arquivos de teste
 
 @pytest.mark.asyncio
 async def test_create_room_file(db: AsyncSession):
