@@ -116,7 +116,7 @@ async def test_store_file_in_room_with_limit(client: TestClient):
         store_response = client.post(f"/rooms/{room_id}/UserDeTeste/files", files=file_data)
         assert store_response.status_code == 200, store_response.text
     
-    # After 5 files we expect to get 400 - 
+    # After 5 files we expect to get 400 - exception flow
     store_response = client.post(f"/rooms/{room_id}/UserDeTeste/files", files=file_data)
     assert store_response.status_code == 400, store_response.text
     assert store_response.json().get("detail") == "Você atingiu o limite de arquivos na sala, exclua um arquivo para adicionar outro"
